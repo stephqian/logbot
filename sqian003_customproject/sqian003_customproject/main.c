@@ -8,71 +8,98 @@
 #define SET_BIT(p,i) ((p) |= (1 << (i)))
 #define CLR_BIT(p,i) ((p) &= ~(1 << (i)))
 #define GET_BIT(p,i) ((p) & (1 << (i)))
-#define SHIFT_REG PORTA
+#define SHIFT_REG PORTB
 
 // create account
-enum acc_States{start, createUser, userCreated, createPw, verifybot, jsUD, jsLR, jsWait, finish} acc_state;
+enum acc_States{start, createUser, userCreated, createPw, createPin, verifybotmsg, jsUD, jsLR, jsWait, finish} acc_state;
 // password
-enum login_States{init, enterPass, checkPass, wrongWait, done} login_state;
+enum login_States{init, enterPass, checkPass, enterPin, checkPin, resetPw, wrongWait, done} login_state;
 
 // void login();
 unsigned char cursor;
 
 // keypad nums
+unsigned char w;
+unsigned char x;
 unsigned char x;
 unsigned char y;
 unsigned char z;
 unsigned char a;
 unsigned char b;
 unsigned char c;
+unsigned char d;
+unsigned char e;
+
+// flags
+unsigned char EEMEM eeprom_bot = 0;
+unsigned char ram_bot = 0;
 
 // joystick
-uint16_t ud_input = 0x00;
-uint16_t lr_input = 0x00;
-unsigned char up_count = 0x00;
-unsigned char down_count = 0x00;
-unsigned char left_count = 0x00;
-unsigned char right_count = 0x00;
-unsigned char up_actual = 1;
-unsigned char down_actual = 2;
+unsigned short ud_input = 0x00;
+unsigned short lr_input = 0x00;
+unsigned char up_count = 0;
+unsigned char down_count = 0;
+unsigned char left_count = 0;
+unsigned char right_count = 0;
+unsigned char up_actual = 2;
+unsigned char down_actual = 1;
 unsigned char left_actual = 1;
-unsigned char right_actual = 3;
+unsigned char right_actual = 2;
 
 
 // iterators
+unsigned char h = 0;
 unsigned char j = 0;
 unsigned char k = 0;
 unsigned char m = 0;
 unsigned char n = 0;
 unsigned char o = 0;
 unsigned char p = 0;
+unsigned char q = 0;
+unsigned char r = 0;
 unsigned char try = 1;
 
 unsigned char username;
 unsigned char EEMEM eeprom_user[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
 unsigned char EEMEM eeprom_pass[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
+unsigned char EEMEM eeprom_pin[4] = {0x00, 0x00, 0x00, 0x00, 0x00};
 unsigned char ram_user[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
 unsigned char ram_pass[5] = {0x00, 0x00, 0x00, 0x00, 0x00};
+unsigned char ram_pin[4] = {0x00, 0x00, 0x00, 0x00};
 	
 // joystick
 void A2D_init() {
 	ADCSRA |= (1 << ADEN) | (1 << ADSC) | (1 << ADATE);
 }
 
+void Set_A2D_Pin(unsigned char pinNum)
+{
+	ADMUX = (pinNum <= 0x07) ? pinNum : ADMUX;
+	static unsigned char h = 0;
+	for(h = 0; h < 15; ++h){asm("nop");}
+}
+
+void A2D_convert()
+{
+	ADCSRA |=(1<<ADSC); // begin converting
+	while ( !(ADCSRA & (1<<ADIF))); // wait to make sure all pins are read
+}
 
 int main(void)
 {
 	/* Replace with your application code */
 	DDRC = 0xF0; PORTC = 0x0F; // keypad
-	DDRB = 0xFF; PORTB = 0x00; // LCD
+	DDRB = 0xFF; PORTB = 0x00; // LCD & shift register
 	DDRD = 0xFF; PORTD = 0x00; // LCD
-	DDRA = 0xFF; PORTA = 0x00; // shift register
+	DDRA = 0x00; PORTA = 0xFF; // joystick
 	
 	
-	unsigned char humPattern [] = {0x0e, 0x0e, 0x04, 0x04, 0x1f, 0x04, 0x0a, 0x0a} ;
+	unsigned char humPattern[] = {0x0e, 0x0e, 0x04, 0x04, 0x1f, 0x04, 0x0a, 0x0a} ;
 	
 	TimerOn();
 	TimerSet(300);
+	
+	transferdata(0x00); // clears lights
 	
 	A2D_init();
 	
@@ -83,11 +110,10 @@ int main(void)
 	LCD_WriteCommand(0x0c); //Display on Cursor off
 	
 	ram_user[4] = eeprom_read_byte(&eeprom_user[4]);
+	ram_bot = eeprom_read_byte(&eeprom_bot);
 	
-	if (ram_user[4] != 1) { // no username made
-		LCD_DisplayString(1, "Enter Username");
-	}
-	else { // username made
+	
+	if (ram_user[4] == 1 && ram_bot == 0) { // username made
 		LCD_DisplayString(1, "Welcome  ");
 		
 		// creating the character
@@ -107,6 +133,9 @@ int main(void)
 		LCD_WriteData(ram_user[2]);
 		LCD_WriteData(ram_user[3]);
 	}
+	else { // no username made
+		LCD_DisplayString(1, "Make Username");
+	}
 	
 	// state = start;
 	cursor = 17;
@@ -116,19 +145,17 @@ int main(void)
 	{
 		while(!TimerFlag) {};
 		TimerFlag = 0;
-		if (ram_user[4] != 1) {
-			createAcc();
-		}
-		else {
+		if (ram_user[4] == 1 && ram_bot == 0) {
 			login();
 		}
-		
-		
+		else {
+			createAcc();
+		}
 	}
 }
 
 // shift register
-void transmit_data(unsigned char data){
+void transferdata(unsigned char data){
 	unsigned char inp = data;
 	
 	SET_BIT(SHIFT_REG, 3);	// SRCLR
@@ -188,10 +215,10 @@ void createAcc() {
 		y = GetKeypadKey();
 		if (k >= 4) {
 			LCD_DisplayString(1, "Password Created");
-			transmit_data(0xF8);
+			transferdata(0xF8);
 			_delay_ms(15000);
-			transmit_data(0x00);
-			acc_state = verifybot;
+			transferdata(0x00);
+			acc_state = createPin;
 			break;
 		}
 		else if (y != '\0') {
@@ -203,60 +230,87 @@ void createAcc() {
 		}
 		break;
 		
-		case verifybot:
-		LCD_DisplayString(1, "Verify you're human");
-		LCD_Cursor(17);
-		LCD_DisplayString(1, "1U, 2D, 1L, 3R");
-		acc_state = jsUD;
-		acc_state = jsLR;
+		case createPin:
+		LCD_DisplayString(1, "Create PIN:");
+		w = GetKeypadKey();
+		if (h >= 3) {
+			LCD_DisplayString(1, "Pin Created");
+			transferdata(0xF8);
+			_delay_ms(15000);
+			transferdata(0x00);
+			acc_state = verifybotmsg;
+			break;
+		}
+		else if (w != '\0') {
+			LCD_Cursor(17+h);
+			LCD_WriteData(w);
+			eeprom_write_byte(&eeprom_pin[h], w);
+			h++;
+			acc_state = createPin;
+		}
 		break;
 		
+		case verifybotmsg:
+		LCD_DisplayString(1, "Verify human");
+		_delay_ms(15000);
+		LCD_DisplayString(1, "U,D,R,U,L,R");
+		acc_state = jsUD;
+		
 		case jsUD:
-		ADMUX = 7;
-		ud_input = ADC;
 		z = GetKeypadKey();
 		if (z != '#') {
-			if (ud_input < 512) {
-				++down_count;
-			}
-			else if (ud_input > 512) {
+			Set_A2D_Pin(0x00);
+			A2D_convert();
+			ud_input = ADC;
+			if(ud_input > 700) {
+				LCD_DisplayString(1, "up");
 				++up_count;
 			}
-			acc_state = jsUD;
-			break;	
+			else if (ud_input < 350) {
+				LCD_DisplayString(1, "down");
+				++down_count;
+			}
+			acc_state=jsLR;
+			break;
 		}
-		else {
+		else if (z == '#') {
 			acc_state = jsWait;
 			break;
 		}
 		
 		case jsLR:
-		ADMUX = 6;
-		lr_input = ADC;
 		z = GetKeypadKey();
 		if (z != '#') {
-			if (lr_input < 512) {
+			Set_A2D_Pin(0x01);
+			A2D_convert();
+			lr_input = ADC;
+			if(lr_input > 700) {
+				LCD_DisplayString(1, "left");
 				++left_count;
 			}
-			else if (lr_input > 512) {
+			else if (lr_input < 350) {
+				LCD_DisplayString(1, "right");
 				++right_count;
 			}
-			acc_state = jsLR;
+			acc_state=jsUD;
 			break;
 		}
-		else {
+		else if (z == '#') {
 			acc_state = jsWait;
 			break;
 		}
-		
+			
+			
 		case jsWait:
 		if ((up_count == up_actual) && (down_count == down_actual) && (left_count == left_actual) && (right_count == right_actual)) {
 			LCD_DisplayString(1, "Human Verified!");
+			eeprom_write_byte(&eeprom_bot, 0);
 			acc_state = finish;
 			break;
 		}
 		else {
-			LCD_DisplayString(1, "Bot Detected! Bye!");
+			LCD_DisplayString(1, "Bye Bot!");
+			eeprom_write_byte(&eeprom_bot, 1);
 			// LCD_ClearScreen();
 			acc_state = finish;
 			break;
@@ -264,7 +318,6 @@ void createAcc() {
 		
 		case finish:
 		// LCD_ClearScreen();
-		LCD_WriteData(down_count);
 		break;
 	}
 }
@@ -327,18 +380,77 @@ void login() {
 		
 		case checkPass:
 		if ( (ram_pass[0] == eeprom_read_byte(&eeprom_pass[0])) && (ram_pass[1] == eeprom_read_byte(&eeprom_pass[1])) && (ram_pass[2] == eeprom_read_byte(&eeprom_pass[2])) && (ram_pass[3] == eeprom_read_byte(&eeprom_pass[3])) ) {
-			LCD_DisplayString(1, "Password Correct");
-			transmit_data(0xF8);
+			LCD_DisplayString(1, "Password CorrectLogin Successful");
+			transferdata(0xF8);
 			_delay_ms(15000);
+			transferdata(0x00);
 			login_state = done;
 			break;
 		}
 		else {
-			LCD_DisplayString(1, "Password wrong!");
-			login_state = wrongWait;
-			break;	
+			try++;
+			if (try < 4) {
+				LCD_DisplayString(1, "Password wrong!");
+				login_state = init;
+				break;
+			}
+			if (try == 4) {
+				LCD_DisplayString(1, "Enter Pin");
+				login_state = enterPin;
+				break;
+			}
 		}
 		break;
+		
+		case enterPin:
+		d = GetKeypadKey();
+		if (q >= 3) {
+			login_state = checkPin;
+			break;
+		}
+		else if (d != '\0') {
+			LCD_Cursor(17+q);
+			LCD_WriteData('*');
+			ram_pin[q] = d;
+			q++;
+		}
+		login_state = enterPin;
+		break;
+		
+		case checkPin:
+		if ( (ram_pin[0] == eeprom_read_byte(&eeprom_pin[0])) && (ram_pin[1] == eeprom_read_byte(&eeprom_pin[1])) && (ram_pin[2] == eeprom_read_byte(&eeprom_pin[2])) ) {
+			LCD_DisplayString(1, "Reset Password");
+			login_state = resetPw;
+			break;
+		}
+		else {
+			LCD_DisplayString(1, "Wrong Bye!");
+			_delay_ms(15000);
+			LCD_ClearScreen();
+			login_state = finish;
+			break;
+		}
+		break;
+		
+		case resetPw:
+		e = GetKeypadKey();
+		if (r >= 4) {
+			LCD_DisplayString(1, "Password Reset");
+			transferdata(0xF8);
+			_delay_ms(15000);
+			transferdata(0x00);
+			acc_state = done;
+			break;
+		}
+		else if (e != '\0') {
+			LCD_Cursor(17+r);
+			LCD_WriteData(e);
+			eeprom_update_byte(&eeprom_pass[r], e);
+			r++;
+			acc_state = resetPw;
+		}
+		break;
+		
 		
 		case wrongWait:
 		if (try < 3) {
