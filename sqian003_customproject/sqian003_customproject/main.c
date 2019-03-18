@@ -427,7 +427,7 @@ void login() {
 			LCD_DisplayString(1, "Wrong Bye!");
 			_delay_ms(15000);
 			LCD_ClearScreen();
-			login_state = finish;
+			login_state = done;
 			break;
 		}
 		break;
@@ -439,7 +439,7 @@ void login() {
 			transferdata(0xF8);
 			_delay_ms(15000);
 			transferdata(0x00);
-			acc_state = done;
+			login_state = done;
 			break;
 		}
 		else if (e != '\0') {
@@ -447,7 +447,7 @@ void login() {
 			LCD_WriteData(e);
 			eeprom_update_byte(&eeprom_pass[r], e);
 			r++;
-			acc_state = resetPw;
+			login_state = resetPw;
 		}
 		break;
 		
