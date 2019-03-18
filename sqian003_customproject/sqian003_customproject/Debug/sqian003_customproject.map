@@ -435,7 +435,7 @@ END GROUP
  *(.fini0)
                 0x00000af8                _etext = .
 
-.data           0x00800100      0x11c load address 0x00000af8
+.data           0x00800100      0x112 load address 0x00000af8
                 0x00800100                PROVIDE (__data_start, .)
  *(.data)
  *(.data*)
@@ -461,90 +461,89 @@ END GROUP
  .rodata        0x00800109        0x8 main.o
  *(.rodata*)
  .rodata.str1.1
-                0x00800111      0x10a main.o
-                                0x10f (size before relaxing)
+                0x00800111      0x101 main.o
+                                0x106 (size before relaxing)
  *(.gnu.linkonce.r*)
-                0x0080021c                . = ALIGN (0x2)
- *fill*         0x0080021b        0x1 
-                0x0080021c                _edata = .
-                0x0080021c                PROVIDE (__data_end, .)
+                0x00800212                . = ALIGN (0x2)
+                0x00800212                _edata = .
+                0x00800212                PROVIDE (__data_end, .)
 
-.bss            0x0080021c       0x33
-                0x0080021c                PROVIDE (__bss_start, .)
+.bss            0x00800212       0x33
+                0x00800212                PROVIDE (__bss_start, .)
  *(.bss)
  *(.bss*)
- .bss.h.2118    0x0080021c        0x1 main.o
- .bss.ram_pin   0x0080021d        0x4 main.o
-                0x0080021d                ram_pin
- .bss.ram_pass  0x00800221        0x5 main.o
-                0x00800221                ram_pass
- .bss.ram_user  0x00800226        0x5 main.o
-                0x00800226                ram_user
- .bss.r         0x0080022b        0x1 main.o
-                0x0080022b                r
- .bss.q         0x0080022c        0x1 main.o
-                0x0080022c                q
- .bss.p         0x0080022d        0x1 main.o
-                0x0080022d                p
- .bss.o         0x0080022e        0x1 main.o
-                0x0080022e                o
- .bss.n         0x0080022f        0x1 main.o
-                0x0080022f                n
- .bss.m         0x00800230        0x1 main.o
-                0x00800230                m
- .bss.k         0x00800231        0x1 main.o
-                0x00800231                k
- .bss.j         0x00800232        0x1 main.o
-                0x00800232                j
- .bss.h         0x00800233        0x1 main.o
-                0x00800233                h
+ .bss.h.2118    0x00800212        0x1 main.o
+ .bss.ram_pin   0x00800213        0x4 main.o
+                0x00800213                ram_pin
+ .bss.ram_pass  0x00800217        0x5 main.o
+                0x00800217                ram_pass
+ .bss.ram_user  0x0080021c        0x5 main.o
+                0x0080021c                ram_user
+ .bss.r         0x00800221        0x1 main.o
+                0x00800221                r
+ .bss.q         0x00800222        0x1 main.o
+                0x00800222                q
+ .bss.p         0x00800223        0x1 main.o
+                0x00800223                p
+ .bss.o         0x00800224        0x1 main.o
+                0x00800224                o
+ .bss.n         0x00800225        0x1 main.o
+                0x00800225                n
+ .bss.m         0x00800226        0x1 main.o
+                0x00800226                m
+ .bss.k         0x00800227        0x1 main.o
+                0x00800227                k
+ .bss.j         0x00800228        0x1 main.o
+                0x00800228                j
+ .bss.h         0x00800229        0x1 main.o
+                0x00800229                h
  .bss.right_count
-                0x00800234        0x1 main.o
-                0x00800234                right_count
+                0x0080022a        0x1 main.o
+                0x0080022a                right_count
  .bss.left_count
-                0x00800235        0x1 main.o
-                0x00800235                left_count
+                0x0080022b        0x1 main.o
+                0x0080022b                left_count
  .bss.down_count
-                0x00800236        0x1 main.o
-                0x00800236                down_count
- .bss.up_count  0x00800237        0x1 main.o
-                0x00800237                up_count
- .bss.lr_input  0x00800238        0x2 main.o
-                0x00800238                lr_input
- .bss.ud_input  0x0080023a        0x2 main.o
-                0x0080023a                ud_input
- .bss.ram_bot   0x0080023c        0x1 main.o
-                0x0080023c                ram_bot
+                0x0080022c        0x1 main.o
+                0x0080022c                down_count
+ .bss.up_count  0x0080022d        0x1 main.o
+                0x0080022d                up_count
+ .bss.lr_input  0x0080022e        0x2 main.o
+                0x0080022e                lr_input
+ .bss.ud_input  0x00800230        0x2 main.o
+                0x00800230                ud_input
+ .bss.ram_bot   0x00800232        0x1 main.o
+                0x00800232                ram_bot
  .bss._avr_timer_cntcurr
-                0x0080023d        0x4 main.o
-                0x0080023d                _avr_timer_cntcurr
+                0x00800233        0x4 main.o
+                0x00800233                _avr_timer_cntcurr
  .bss.TimerFlag
-                0x00800241        0x1 main.o
-                0x00800241                TimerFlag
+                0x00800237        0x1 main.o
+                0x00800237                TimerFlag
  *(COMMON)
- COMMON         0x00800242        0xd main.o
-                0x00800242                b
-                0x00800243                x
-                0x00800244                username
-                0x00800245                acc_state
-                0x00800246                w
-                0x00800247                z
-                0x00800248                cursor
-                0x00800249                c
-                0x0080024a                y
-                0x0080024b                d
-                0x0080024c                login_state
-                0x0080024d                a
-                0x0080024e                e
-                0x0080024f                PROVIDE (__bss_end, .)
+ COMMON         0x00800238        0xd main.o
+                0x00800238                b
+                0x00800239                x
+                0x0080023a                username
+                0x0080023b                acc_state
+                0x0080023c                w
+                0x0080023d                z
+                0x0080023e                cursor
+                0x0080023f                c
+                0x00800240                y
+                0x00800241                d
+                0x00800242                login_state
+                0x00800243                a
+                0x00800244                e
+                0x00800245                PROVIDE (__bss_end, .)
                 0x00000af8                __data_load_start = LOADADDR (.data)
-                0x00000c14                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x00000c0a                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x0080024f        0x0
+.noinit         0x00800245        0x0
                 [!provide]                PROVIDE (__noinit_start, .)
  *(.noinit*)
                 [!provide]                PROVIDE (__noinit_end, .)
-                0x0080024f                _end = .
+                0x00800245                _end = .
                 [!provide]                PROVIDE (__heap_start, .)
 
 .eeprom         0x00810000        0xf
